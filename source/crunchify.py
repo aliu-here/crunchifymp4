@@ -154,7 +154,7 @@ for i in threadlist:
 if (audiopresent & compressaudio):
     os.system(f"lame --comp {compratio} output-audio.mp3")
 
-os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -framerate {framerate} -vf "scale={max(res)}:{min(res)}" {"-i output-audio.mp3"*audiopresent} {outputname}.mp4')
+os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -framerate {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={max(res)}:{min(res)}"{outputname}.mp4')
 os.system(f"mv {outputname}.mp4 ..")
 print(framerate)
 
