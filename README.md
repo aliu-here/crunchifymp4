@@ -13,5 +13,5 @@ install:<br>
 download the source directory <br>
 run ```python installer.py``` <br>
 you can now run ```crunchify (mp4 name)``` anywhere <br>
-run ```crunchify -h``` to get more information about flags <br>
+run ```crunchify -h``` or ```crunchify``` to get more information about flags <br>
 as of now, seems like it's linux & mac only
