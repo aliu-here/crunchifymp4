@@ -1,11 +1,21 @@
 import os
 import subprocess
 
+user = subprocess.check_output("whoami").strip().decode('utf-8')
+
+crunchifyexists = True 
+changes = True
+try:
+    oldcrunchify = open(f"/home/{user}/bin/crunchify", "r")
+    newcrunchify = open("crunchify.py", "r")
+    changes = oldcrunchify.read() == newcrunchify.read()
+except:
+    crunchifyexists = False
+
 os.system("mkdir -p ~/bin")
 os.system("cp crunchify.py ~/bin/crunchify")
 os.system("chmod +x ~/bin/crunchify")
 
-user = subprocess.check_output("whoami").strip().decode('utf-8')
 if (user == "root"):
     print("run this as a regular user")
     quit()
@@ -17,4 +27,7 @@ if "export PATH=$PATH:$HOME/bin" not in readbashrc.read():
 else:
     print("~/bin already added to PATH")
 
-print("successful installation! use this to compress mp4 files terribly however much you want")
+if (not crunchifyexists):
+    print("successful installation! use this to compress mp4 files terribly however much you want")
+elif (changes):
+    print("successful update!")
