@@ -10,7 +10,7 @@ import subprocess
 
 filename = ""
 try:
-    filename = sys.argv[1]
+    filename = '"' +  sys.argv[1] + '"'
 except:
     pass
 audiopresent = True
@@ -20,7 +20,6 @@ compressvideo = True
 quality = 1 
 iterations = 20
 compratio = 50
-outputname = filename[:-4] + "compressed"
 fail = False
 threadnum = 50
 res = []
@@ -33,8 +32,8 @@ except:
     framerate = 60
 def worker(number, segment, iterations, quality):
 #    print(number, segment, iterations, quality)
+    filesdone = 0
     for i in segment:
-        filesdone = 0
         if (videopresent and compressvideo):
             currtime = time.time()
             for j in range(iterations):
@@ -44,11 +43,18 @@ def worker(number, segment, iterations, quality):
             currtime -= time.time()
             print(f"{filesdone}/{len(files) - 1 - 1*audiopresent} files done by thread {number}, took {-currtime} seconds")
 
+
 if (not filename.endswith(".mp4") and filename != "-h" and filename != ""):
-    print("sorry, only works with mp4 files as of now; you can convert it using ffmpeg though")
-    quit()
+    newfile = "-".join(filename[1:filename.rfind('.')].split())
+    os.system(f"ffmpeg -i {filename} {newfile}.mp4")
+    filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
+    #some cursed shit above here to deal with spaces in the file name
 
 filename = filename[:-4]
+
+outputname = filename + "compressed"
+
+print(filename)
 
 if "-h" in sys.argv or len(sys.argv) == 1:
     print("crunchify.py")
@@ -114,7 +120,7 @@ if (threadnum < 1 or threadnum > 100):
     print("bad number of threads")
     quit()
 
-os.system(f"mkdir {filename}data")
+os.system(f"mkdir -p {filename}data")
 os.system(f"cp {filename}.mp4 {filename}data")
 os.chdir(f"{filename}data")
 os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3")
@@ -144,7 +150,7 @@ for i in range(threadnum):
 
 for i in enumerate(sublists):
     thread = threading.Thread(target=worker, args=(i[0], i[1], iterations, quality))
-    thread.setDaemon(True)
+    thread.daemon = True
     threadlist.append(thread)
     thread.start()
 
@@ -154,9 +160,9 @@ for i in threadlist:
 if (audiopresent & compressaudio):
     os.system(f"lame --comp {compratio} output-audio.mp3")
 
-os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -framerate {framerate} -vf "scale={max(res)}:{min(res)}" {"-i output-audio.mp3"*audiopresent} {outputname}.mp4')
+os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={max(res)}:{min(res)}" {outputname}.mp4')
+
 os.system(f"mv {outputname}.mp4 ..")
-print(framerate)
 
 def endfunc():
     os.chdir("..")
