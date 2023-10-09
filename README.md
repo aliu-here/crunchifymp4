@@ -10,7 +10,7 @@ dependencies:
 </ul>
 
 install:<br>
-download the files from source <br>
+download the source directory <br>
 run ```python installer.py``` <br>
 you can now run ```crunchify (mp4 name)``` anywhere <br>
 run ```crunchify -h``` to get more information about flags <br>
