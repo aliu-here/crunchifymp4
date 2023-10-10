@@ -42,7 +42,7 @@ def worker(number, segment, iterations, quality):
 if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
     newfile = "-".join(filename[1:filename.rfind('.')].split())
     os.system(f"ffmpeg -i {filename} {newfile}.mp4")
-    filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
+    filename = '"' + "-".join(filename[1:filename.rfind('.')].split()) + ".mp4" + '"'
     #some cursed shit above here to deal with spaces in the file name
 
 try:
