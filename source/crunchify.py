@@ -41,7 +41,7 @@ def worker(number, segment, iterations, quality):
 
 if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
     newfile = "-".join(filename[1:filename.rfind('.')].split())
-    os.system(f"ffmpeg -i {filename} {newfile}.mp4 > /dev/null")
+    os.system(f"ffmpeg -i {filename} {newfile}.mp4")
     filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
     #some cursed shit above here to deal with spaces in the file name
 
@@ -139,10 +139,10 @@ if (threadnum < 1 or threadnum > 100):
 os.system(f"mkdir -p {filename}data")
 os.system(f"cp {filename}.mp4 {filename}data")
 os.chdir(f"{filename}data")
-os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3 > /dev/null")
+os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3")
 print("audio taken out of file by ffmpeg")
 #4 digit file numbering; should probably raise
-os.system(f"ffmpeg -i {filename}.mp4 img%0{digitsreq}d.jpg > /dev/null")
+os.system(f"ffmpeg -i {filename}.mp4 img%0{digitsreq}d.jpg")
 print("images taken out of file as jpgs by ffmpeg")
 
 
@@ -183,7 +183,7 @@ if (audiopresent & compressaudio):
     print("audio compressed by lame")
 
 #ffmpeg create output mp4 
-os.system(f'ffmpeg {f"-i img%0{digitsreq}d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4 > /dev/null')
+os.system(f'ffmpeg {f"-i img%0{digitsreq}d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
 print("images and audio combined into the final mp4 by ffmpeg")
 
 #move it back out of the working directory, then delete working directory
