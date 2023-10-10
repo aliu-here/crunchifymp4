@@ -27,6 +27,7 @@ res = []
 def worker(number, segment, iterations, quality):
 #    print(number, segment, iterations, quality)
     filesdone = 0
+    segmentlen = len(segment)
     for i in segment:
         if (videopresent and compressvideo):
             currtime = time.time()
@@ -35,7 +36,7 @@ def worker(number, segment, iterations, quality):
                         os.system(f"mogrify -quality {quality} -format jpg {i}")
             filesdone += 1
             currtime -= time.time()
-            print(f"{filesdone}/{len(files) - 1 - 1*audiopresent} files done by thread {number}, took {-currtime} seconds")
+            print(f"{filesdone}/{segmentlen} files done by thread {number}, took {-currtime} seconds")
 
 
 if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
@@ -43,6 +44,7 @@ if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
     os.system(f"ffmpeg -i {filename} {newfile}.mp4")
     filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
     #some cursed shit above here to deal with spaces in the file name
+
 try:
     res = subprocess.check_output(rf'ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 {filename}', shell=True).strip().decode().split('x')
     framerate = float(subprocess.check_output(rf'ffmpeg -i {filename} 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"', shell=True))
@@ -51,11 +53,15 @@ except:
     framerate = 60
 
 filename = filename[1:-5]
+filelength = subprocess.check_output(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {filename}.mp4').decode('utf-8')
+framenum = round(int(filelength)/(1/framerate)) #get number of frames to calculate digits required for numbers 
+digitsreq = math.ceil(math.log10(framenum))
 
 outputname = filename + "compressed"
 
-print(filename)
+#print(filename)
 
+#docs; it has two newlines so it's easier to read (for me, at least)
 if "-h" in sys.argv or len(sys.argv) == 1:
     print("crunchify.py")
     print("crunchifies your mp4 files using ffmpeg")
@@ -70,9 +76,11 @@ if "-h" in sys.argv or len(sys.argv) == 1:
     print("--audiocompressionratio <integer>: specifies audio compression ratio\n")
     print("--threads <integer>: specifies number of threads, between 1 and 100\n")
     print("--framerate <integer>: specifies framerate of the output video\n")
+    print("--resolution <integer>x<integer>: specifies resolution; if not it's the resolution of the original video")
     print("-o <string>: specifies output file name; if not, the default is <originalname>compressed.mp4\n")
     quit()
 
+#this is kinda stupid to have an if statement for each one but case switch is exclusive so i think this is the only way to go
 if ("--noaudio" in sys.argv):
     audiopresent = False
 if ("--novideo" in sys.argv):
@@ -96,9 +104,14 @@ if ("--audiocompressionratio" in sys.argv):
         compratio = int(sys.argv[sys.argv.index("--audiocompressionratio") + 1])
     except:
         fail = True
+if ("--resolution" in sys.argv):
+    try:
+        resolution = sys.argv[sys.argv.index("--resolution") + 1].split('x')
+    except:
+        fail = True
 if ("-o" in sys.argv):
     try:
-        filename = sys.argv[sys.argv.index("-o") + 1]
+        outputname = sys.argv[sys.argv.index("-o") + 1]
     except:
         fail = True
 if ("--threads" in sys.argv):
@@ -120,11 +133,15 @@ if (threadnum < 1 or threadnum > 100):
     print("bad number of threads")
     quit()
 
+#create a directory to hold our mp3 and jpg files; since we want to clean up and running
+#rm img%04d.jpg output-audio.mp3
+#might be overkill and erase some files we don't want to
 os.system(f"mkdir -p {filename}data")
 os.system(f"cp {filename}.mp4 {filename}data")
 os.chdir(f"{filename}data")
 os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3")
-os.system(f"ffmpeg -i {filename}.mp4 img%04d.jpg")
+#4 digit file numbering; should probably raise
+os.system(f"ffmpeg -i {filename}.mp4 img%0{digitsreq}d.jpg")
 
 
 filesdone = 0
@@ -148,6 +165,7 @@ for i in range(threadnum):
     if j < sublistlen - 1:
         break
 
+#multithreading to make it run faster
 for i in enumerate(sublists):
     thread = threading.Thread(target=worker, args=(i[0], i[1], iterations, quality))
     thread.daemon = True
@@ -157,15 +175,18 @@ for i in enumerate(sublists):
 for i in threadlist:
     i.join()
 
+#compress w/ Lame
 if (audiopresent & compressaudio):
     os.system(f"lame --comp {compratio} output-audio.mp3")
 
+#ffmpeg create output mp4 
 os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
 
+#move it back out of the working directory, then delete working directory
 os.system(f"mv {outputname}.mp4 ..")
 
 def endfunc():
-    print(res)
+#    print(res)
     os.chdir("..")
     os.system(f"rm -r {filename}data")
 
