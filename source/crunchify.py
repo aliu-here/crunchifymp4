@@ -24,12 +24,6 @@ fail = False
 threadnum = 50
 res = []
 
-try:
-    res = subprocess.check_output(rf'ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 {filename}').strip().decode().split('x')
-    framerate = float(subprocess.check_output(rf'ffmpeg -i {filename} 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"', shell=True))
-except:
-    res = [1080, 1920]
-    framerate = 60
 def worker(number, segment, iterations, quality):
 #    print(number, segment, iterations, quality)
     filesdone = 0
@@ -44,13 +38,19 @@ def worker(number, segment, iterations, quality):
             print(f"{filesdone}/{len(files) - 1 - 1*audiopresent} files done by thread {number}, took {-currtime} seconds")
 
 
-if (not filename.endswith(".mp4") and filename != "-h" and filename != ""):
+if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
     newfile = "-".join(filename[1:filename.rfind('.')].split())
     os.system(f"ffmpeg -i {filename} {newfile}.mp4")
     filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
     #some cursed shit above here to deal with spaces in the file name
+try:
+    res = subprocess.check_output(rf'ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 {filename}', shell=True).strip().decode().split('x')
+    framerate = float(subprocess.check_output(rf'ffmpeg -i {filename} 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"', shell=True))
+except:
+    res = [1080, 1920]
+    framerate = 60
 
-filename = filename[:-4]
+filename = filename[1:-5]
 
 outputname = filename + "compressed"
 
@@ -160,11 +160,12 @@ for i in threadlist:
 if (audiopresent & compressaudio):
     os.system(f"lame --comp {compratio} output-audio.mp3")
 
-os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={max(res)}:{min(res)}" {outputname}.mp4')
+os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
 
 os.system(f"mv {outputname}.mp4 ..")
 
 def endfunc():
+    print(res)
     os.chdir("..")
     os.system(f"rm -r {filename}data")
 
