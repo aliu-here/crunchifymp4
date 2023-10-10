@@ -3,6 +3,12 @@ import subprocess
 
 user = subprocess.check_output("whoami").strip().decode('utf-8')
 
+lamecheck = os.system("lame 2&> /dev/null") == 32512
+ffmpegcheck = os.system("ffmpeg 2&> /dev/null") == 32512 
+mogrifycheck = os.system("mogrify 2&> /dev/null") == 32512
+if (lamecheck or ffmpegcheck or mogrifycheck):
+    print("One or more dependencies missing. Please install " + "Lame, "*lamecheck + "FFmpeg, "*ffmpegcheck + "and Mogrify (from ImageMagick)"*mogrifycheck)
+
 crunchifyexists = True 
 changes = True
 try:

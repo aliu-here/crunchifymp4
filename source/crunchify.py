@@ -33,7 +33,7 @@ def worker(number, segment, iterations, quality):
             currtime = time.time()
             for j in range(iterations):
                 if (i.endswith(".jpg")):
-                        os.system(f"mogrify -quality {quality} -format jpg {i}")
+                        os.system(f"mogrify -quality {quality} -format jpg {i} 2&> /dev/null")
             filesdone += 1
             currtime -= time.time()
             print(f"{filesdone}/{segmentlen} files done by thread {number}, took {-currtime} seconds")
@@ -41,7 +41,7 @@ def worker(number, segment, iterations, quality):
 
 if (not filename.endswith(".mp4\"") and filename != "-h" and filename != ""):
     newfile = "-".join(filename[1:filename.rfind('.')].split())
-    os.system(f"ffmpeg -i {filename} {newfile}.mp4")
+    os.system(f"ffmpeg -i {filename} {newfile}.mp4 > /dev/null")
     filename = "-".join(filename[1:filename.rfind('.')].split()) + ".mp4"
     #some cursed shit above here to deal with spaces in the file name
 
@@ -53,8 +53,8 @@ except:
     framerate = 60
 
 filename = filename[1:-5]
-filelength = subprocess.check_output(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {filename}.mp4').decode('utf-8')
-framenum = round(int(filelength)/(1/framerate)) #get number of frames to calculate digits required for numbers 
+filelength = subprocess.check_output(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {filename}.mp4', shell=True).strip().decode('utf-8')
+framenum = round(float(filelength)/(1/framerate)) #get number of frames to calculate digits required for numbers 
 digitsreq = math.ceil(math.log10(framenum))
 
 outputname = filename + "compressed"
@@ -139,9 +139,11 @@ if (threadnum < 1 or threadnum > 100):
 os.system(f"mkdir -p {filename}data")
 os.system(f"cp {filename}.mp4 {filename}data")
 os.chdir(f"{filename}data")
-os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3")
+os.system(f"ffmpeg -i {filename}.mp4 -vn -c:a libmp3lame output-audio.mp3 > /dev/null")
+print("audio taken out of file by ffmpeg")
 #4 digit file numbering; should probably raise
-os.system(f"ffmpeg -i {filename}.mp4 img%0{digitsreq}d.jpg")
+os.system(f"ffmpeg -i {filename}.mp4 img%0{digitsreq}d.jpg > /dev/null")
+print("images taken out of file as jpgs by ffmpeg")
 
 
 filesdone = 0
@@ -178,9 +180,11 @@ for i in threadlist:
 #compress w/ Lame
 if (audiopresent & compressaudio):
     os.system(f"lame --comp {compratio} output-audio.mp3")
+    print("audio compressed by lame")
 
 #ffmpeg create output mp4 
-os.system(f'ffmpeg {"-i img%04d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
+os.system(f'ffmpeg {f"-i img%0{digitsreq}d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4 > /dev/null')
+print("images and audio combined into the final mp4 by ffmpeg")
 
 #move it back out of the working directory, then delete working directory
 os.system(f"mv {outputname}.mp4 ..")
