@@ -183,7 +183,7 @@ if (audiopresent & compressaudio):
     print("audio compressed by lame")
 
 #ffmpeg create output mp4 
-os.system(f'ffmpeg {f"-i img%0{digitsreq}d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
+os.system(f'ffmpeg {f"-i img%0{digitsreq}d.jpg"*videopresent} -r {framerate} {"-i output-audio.mp3.mp3"*audiopresent} -vf "scale={res[0]}:{res[1]}" -aspect {res[0]}:{res[1]} {outputname}.mp4')
 print("images and audio combined into the final mp4 by ffmpeg")
 
 #move it back out of the working directory, then delete working directory
