@@ -52,12 +52,6 @@ except:
     res = [1080, 1920]
     framerate = 60
 
-filename = filename[1:-5]
-filelength = subprocess.check_output(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {filename}.mp4', shell=True).strip().decode('utf-8')
-framenum = round(float(filelength)/(1/framerate)) #get number of frames to calculate digits required for numbers 
-digitsreq = math.ceil(math.log10(framenum))
-
-outputname = filename + "compressed"
 
 #print(filename)
 
@@ -76,9 +70,17 @@ if "-h" in sys.argv or len(sys.argv) == 1:
     print("--audiocompressionratio <integer>: specifies audio compression ratio\n")
     print("--threads <integer>: specifies number of threads, between 1 and 100\n")
     print("--framerate <integer>: specifies framerate of the output video\n")
-    print("--resolution <integer>x<integer>: specifies resolution; if not it's the resolution of the original video")
+    print("--resolution <integer>x<integer>: specifies resolution; if not it's the resolution of the original video\n")
     print("-o <string>: specifies output file name; if not, the default is <originalname>compressed.mp4\n")
     quit()
+
+filename = filename[1:-5]
+filelength = subprocess.check_output(f'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {filename}.mp4', shell=True).strip().decode('utf-8')
+framenum = round(float(filelength)/(1/framerate)) #get number of frames to calculate digits required for numbers 
+digitsreq = math.ceil(math.log10(framenum))
+
+outputname = filename + "compressed"
+
 
 #this is kinda stupid to have an if statement for each one but case switch is exclusive so i think this is the only way to go
 if ("--noaudio" in sys.argv):
