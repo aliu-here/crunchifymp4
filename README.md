@@ -1,5 +1,5 @@
 # crunchifymp4
-literally just for my shitposting to make compressed video + audio
+makes compressed video + audio
 
 dependencies:
 <ul>
